@@ -1,8 +1,10 @@
 /**
- * カテゴリと種目の選択（F-REC-02、03、09）。計測中・手入力・編集の画面で共通に使う。
+ * カテゴリと種目の選択（順番なし）。手入力・編集の画面で使う（F-REC-06、07）。
+ * 計測の前に順番つきで選ぶ画面は MenuPlanPage.tsx。
  */
-import { IconBarbell, IconStretching } from '@tabler/icons-react';
 import type { Category, CategoryId, Exercise, SessionExercise } from '../../domain/types';
+import { GroupLabel } from './GroupLabel';
+import { GROUP_ORDER } from './sessionUtils';
 import { Button } from '../../ui/Button';
 import { Chip, ChipGroup } from '../../ui/Chip';
 
@@ -51,28 +53,11 @@ export function CategoryPicker({
     });
   };
 
-  const groups = [
-    {
-      key: 'strength',
-      label: (
-        <>
-          <IconBarbell size={18} aria-hidden="true" />
-          筋トレ系
-        </>
-      ),
-      items: categories.filter((c) => c.group === 'strength'),
-    },
-    {
-      key: 'care',
-      label: (
-        <>
-          <IconStretching size={18} aria-hidden="true" />
-          ケア系
-        </>
-      ),
-      items: categories.filter((c) => c.group === 'care'),
-    },
-  ];
+  const groups = GROUP_ORDER.map((group) => ({
+    key: group,
+    label: <GroupLabel group={group} />,
+    items: categories.filter((c) => c.group === group),
+  })).filter((g) => g.items.length > 0);
 
   const selectedCategories = categories.filter((c) => value.categoryIds.includes(c.id));
 

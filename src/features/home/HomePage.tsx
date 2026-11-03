@@ -2,16 +2,13 @@
  * ホーム（基本設計書 3.3 No.1）。
  */
 import { IconPencilPlus, IconPlayerPlay, IconStopwatch } from '@tabler/icons-react';
-import { useNavigate } from 'react-router';
-import { db } from '../../db/db';
-import { startActiveSession } from '../../db/sessionRepository';
 import { durationMinutes, formatElapsed, formatMinutes, toLocalDate } from '../../domain/date';
 import { formatLocalDate } from '../../domain/format';
 import { calcStreak, countTrainedDaysInMonth, findRecentDay } from '../../domain/history';
 import { calcCategoryRecovery } from '../../domain/recovery';
 import { isForgotToEnd, needsBackupReminder } from '../../domain/reminders';
 import { findSorenessTargets } from '../../domain/soreness';
-import { Button, LinkButton } from '../../ui/Button';
+import { LinkButton } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import {
   useActiveSession,
@@ -28,7 +25,6 @@ import { BackupNotice, ForgotEndNotice, SorenessNotice, UnsentNotice } from './H
 import { RecoveryCard } from './RecoveryCard';
 
 export function HomePage() {
-  const navigate = useNavigate();
   // 経過時間を表示するため1秒ごとに更新する。回復状況の計算は軽いので同じ間隔で問題ない
   const now = useNow(1000);
   const settings = useSettings();
@@ -57,11 +53,6 @@ export function HomePage() {
   );
   const unsent = settings.healthEnabled ? liveSessions.filter((s) => s.healthSentAt === null) : [];
 
-  const start = async () => {
-    await startActiveSession(db, Date.now());
-    navigate('/session/active');
-  };
-
   return (
     <div className={styles.page}>
       {active && isForgotToEnd(active, settings.forgotEndHours, now) && (
@@ -80,10 +71,11 @@ export function HomePage() {
               計測中 {formatElapsed(now - active.startAt)}
             </LinkButton>
           ) : (
-            <Button variant="start" block onClick={() => void start()}>
+            // メニューを選んでから計測を始める（F-REC-01）
+            <LinkButton to="/session/plan" variant="start" block>
               <IconPlayerPlay size={28} aria-hidden="true" />
               トレーニング開始
-            </Button>
+            </LinkButton>
           )}
           <LinkButton to="/session/new" variant="text">
             <IconPencilPlus size={20} aria-hidden="true" />

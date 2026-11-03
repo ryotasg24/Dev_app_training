@@ -8,7 +8,7 @@ import { db } from '../../db/db';
 import { markHealthSent } from '../../db/sessionRepository';
 import { formatDateTime } from '../../domain/format';
 import { buildHealthPayload, buildShortcutUrl } from '../../domain/health';
-import type { Category, Session, Settings } from '../../domain/types';
+import type { Category, Exercise, Session, Settings } from '../../domain/types';
 import { onceReturnedToApp, openShortcut } from '../../platform/shortcut';
 import { Button } from '../../ui/Button';
 import { Actions, Notice, Sub } from '../../ui/Card';
@@ -16,10 +16,12 @@ import { Actions, Notice, Sub } from '../../ui/Card';
 interface Props {
   session: Session;
   categories: readonly Category[];
+  /** ランニングの屋内・屋外の判定に使う（基本設計書 6.2） */
+  exercises: readonly Exercise[];
   settings: Settings;
 }
 
-export function HealthSendButton({ session, categories, settings }: Props) {
+export function HealthSendButton({ session, categories, exercises, settings }: Props) {
   const [asking, setAsking] = useState(false);
   const cancelRef = useRef<(() => void) | null>(null);
 
@@ -37,7 +39,10 @@ export function HealthSendButton({ session, categories, settings }: Props) {
     ) {
       return;
     }
-    const url = buildShortcutUrl(settings.shortcutName, buildHealthPayload(session, categories));
+    const url = buildShortcutUrl(
+      settings.shortcutName,
+      buildHealthPayload(session, categories, exercises),
+    );
     cancelRef.current?.();
     cancelRef.current = onceReturnedToApp(() => setAsking(true));
     openShortcut(url);

@@ -13,8 +13,8 @@ export interface SyncFields {
   deleted: 0 | 1;
 }
 
-/** カテゴリの区分 */
-export type CategoryGroup = 'strength' | 'care';
+/** カテゴリの区分：筋トレ系・ケア系・有酸素 */
+export type CategoryGroup = 'strength' | 'care' | 'cardio';
 
 /** カテゴリの固定ID */
 export type CategoryId =
@@ -27,7 +27,8 @@ export type CategoryId =
   | 'posture'
   | 'hip'
   | 'neck'
-  | 'face';
+  | 'face'
+  | 'cardio';
 
 /** 人体図の部位ID（デザイン仕様書 5章） */
 export type BodyRegionId =
@@ -91,6 +92,29 @@ export interface SessionExercise {
 
 export type SessionSource = 'timer' | 'manual';
 
+/** メニューの1項目（開始前に選ぶ、行う順の種目。基本設計書 3.3 No.1'） */
+export interface MenuItem {
+  categoryId: CategoryId;
+  /** 種目。カテゴリだけのステップは null */
+  exerciseId: string | null;
+}
+
+/** 保存したセッションのステップ（基本設計書 4.3） */
+export interface SessionStep extends MenuItem {
+  startAt: number;
+  endAt: number;
+  /** 計算に使ったMETs */
+  mets: number;
+  /** そのステップの推定カロリー（整数） */
+  kcal: number;
+}
+
+/** 計測中のステップ。まだ始めていないステップは startAt・endAt が null */
+export interface ActiveStep extends MenuItem {
+  startAt: number | null;
+  endAt: number | null;
+}
+
 export interface Session extends SyncFields {
   startAt: number;
   endAt: number;
@@ -99,6 +123,8 @@ export interface Session extends SyncFields {
   source: SessionSource;
   categoryIds: CategoryId[];
   exercises: SessionExercise[];
+  /** ステップごとの記録。手入力や版2までの記録は空の配列 */
+  steps: SessionStep[];
   memo: string;
   /** 保存したときの体重（F-CAL-04） */
   weightKg: number;
@@ -146,9 +172,11 @@ export interface Settings {
 /** 計測中のセッション（キー current の0件または1件） */
 export interface ActiveSession {
   key: 'current';
+  /** 開始時刻（1つめのステップの開始時刻と同じ） */
   startAt: number;
-  categoryIds: CategoryId[];
-  exercises: SessionExercise[];
+  steps: ActiveStep[];
+  /** 今のステップの番号（0から数える） */
+  currentIndex: number;
   memo: string;
 }
 

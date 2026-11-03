@@ -7,8 +7,8 @@ describe('isForgotToEnd（F-REC-08）', () => {
   const active: ActiveSession = {
     key: 'current',
     startAt: jst('2026-11-03T21:00'),
-    categoryIds: [],
-    exercises: [],
+    steps: [],
+    currentIndex: 0,
     memo: '',
   };
 

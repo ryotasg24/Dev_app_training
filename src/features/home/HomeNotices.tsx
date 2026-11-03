@@ -13,6 +13,7 @@ import {
 } from '../../domain/format';
 import { defaultForgotEndAt } from '../../domain/reminders';
 import { validateSessionDraft } from '../../domain/session';
+import { closeSteps, currentStep, summarizeSteps } from '../../domain/steps';
 import type { SorenessTarget } from '../../domain/soreness';
 import type { ActiveSession, Category, Session, SorenessLevel } from '../../domain/types';
 import { newId } from '../../platform/device';
@@ -25,18 +26,30 @@ import { errorMessage } from '../session/sessionUtils';
 /** 終了し忘れ（F-REC-08） */
 export function ForgotEndNotice({ active, now }: { active: ActiveSession; now: number }) {
   const navigate = useNavigate();
+  // 今のステップの開始時刻から選べる（基本設計書 5.7）
+  const stepStartAt = currentStep(active)?.startAt ?? active.startAt;
+  const hasSteps = active.steps.length > 0;
   const [value, setValue] = useState(() =>
-    toDateTimeInputValue(defaultForgotEndAt(active.startAt, now)),
+    toDateTimeInputValue(defaultForgotEndAt(stepStartAt, now)),
   );
   const [errors, setErrors] = useState<string[]>([]);
 
   const save = async () => {
     const endAt = fromDateTimeInputValue(value);
-    if (endAt === null || endAt > Date.now()) {
-      setErrors(['終了時刻は、開始時刻から現在までの間で指定してください。']);
+    if (endAt === null || endAt > Date.now() || endAt < stepStartAt) {
+      setErrors(['終了時刻は、今の種目の開始時刻から現在までの間で指定してください。']);
       return;
     }
-    const draftErrors = validateSessionDraft({ ...active, endAt, source: 'timer' }, Date.now());
+    const draftErrors = validateSessionDraft(
+      {
+        startAt: active.startAt,
+        endAt,
+        source: 'timer',
+        ...summarizeSteps(closeSteps(active, endAt)),
+        memo: active.memo,
+      },
+      Date.now(),
+    );
     if (draftErrors.length > 0) {
       setErrors(draftErrors);
       return;
@@ -54,14 +67,17 @@ export function ForgotEndNotice({ active, now }: { active: ActiveSession; now: n
       <p>
         {formatDateTime(active.startAt)} から計測中です。終了し忘れていませんか？
       </p>
-      {active.categoryIds.length === 0 ? (
-        <p>カテゴリが選ばれていません。計測中の画面でカテゴリを選んでから終了してください。</p>
+      {!hasSteps ? (
+        <p>メニューがありません。計測中の画面で破棄して、選び直してください。</p>
       ) : (
-        <Field label="終了時刻">
+        <Field
+          label="終了時刻"
+          hint="今の種目をこの時刻で終え、まだ始めていない種目は記録しません。"
+        >
           <Input
             type="datetime-local"
             value={value}
-            min={toDateTimeInputValue(active.startAt)}
+            min={toDateTimeInputValue(stepStartAt)}
             max={toDateTimeInputValue(now)}
             onChange={(e) => setValue(e.target.value)}
           />
@@ -69,9 +85,7 @@ export function ForgotEndNotice({ active, now }: { active: ActiveSession; now: n
       )}
       <ErrorList errors={errors} />
       <Actions>
-        {active.categoryIds.length > 0 && (
-          <Button onClick={() => void save()}>この時刻で終了して保存</Button>
-        )}
+        {hasSteps && <Button onClick={() => void save()}>この時刻で終了して保存</Button>}
         <LinkButton to="/session/active">計測中の画面へ</LinkButton>
       </Actions>
     </Notice>

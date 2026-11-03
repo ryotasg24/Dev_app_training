@@ -162,6 +162,11 @@ function SessionForm({
         </div>
       </Card>
 
+      {existing && existing.steps.length > 0 && (
+        <Sub>
+          この記録には種目ごとの時間があります。開始日時とメモだけを変えた場合は残りますが、所要時間・カテゴリ・種目を変えると、種目ごとの時間の記録は消えます。
+        </Sub>
+      )}
       {existing?.healthSentAt != null && (
         <Sub>ヘルスケアに送信済みの記録です。アプリで編集しても、ヘルスケアの記録は変わりません。</Sub>
       )}

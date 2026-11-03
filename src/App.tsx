@@ -9,6 +9,7 @@ import { CalendarPage } from './features/calendar/CalendarPage';
 import { HomePage } from './features/home/HomePage';
 import { useSettings } from './features/hooks';
 import { ActiveSessionPage } from './features/session/ActiveSessionPage';
+import { MenuPlanPage } from './features/session/MenuPlanPage';
 import { SessionFormPage } from './features/session/SessionFormPage';
 import { SessionViewPage } from './features/session/SessionViewPage';
 import { CategorySettingsPage } from './features/settings/CategorySettingsPage';
@@ -31,7 +32,7 @@ const NAV_ITEMS = [
 ];
 
 /** タブとメニューを隠して、操作に集中させる画面（基本設計書 3.1） */
-const FOCUS_PATHS = [/^\/session\/active$/, /^\/session\/new$/, /^\/session\/[^/]+\/(done|edit)$/, /^\/welcome$/];
+const FOCUS_PATHS = [/^\/session\/(plan|active)$/, /^\/session\/new$/, /^\/session\/[^/]+\/(done|edit)$/, /^\/welcome$/];
 
 export function App() {
   return (
@@ -74,6 +75,7 @@ function Layout() {
         <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/session/plan" element={<MenuPlanPage />} />
             <Route path="/session/active" element={<ActiveSessionPage />} />
             <Route path="/session/new" element={<SessionFormPage mode="new" />} />
             <Route path="/session/:id" element={<SessionViewPage mode="detail" />} />

@@ -4,7 +4,7 @@
 import { useNavigate, useParams } from 'react-router';
 import { db } from '../../db/db';
 import { softDeleteSession } from '../../db/sessionRepository';
-import { durationMinutes, formatMinutes } from '../../domain/date';
+import { durationMinutes, formatElapsed, formatMinutes } from '../../domain/date';
 import { formatDate, formatTime } from '../../domain/format';
 import { BodyMap } from '../../ui/bodyMap/BodyMap';
 import { Button, LinkButton } from '../../ui/Button';
@@ -12,7 +12,8 @@ import { Actions, Card, Sub } from '../../ui/Card';
 import { useAllExercises, useCategories, useSession, useSettings } from '../hooks';
 import styles from '../page.module.css';
 import { HealthSendButton } from './HealthSendButton';
-import { categoryNames, exerciseNames } from './sessionUtils';
+import { ProteinCard } from './ProteinCard';
+import { categoryNames, exerciseNames, menuItemName, stepNumber } from './sessionUtils';
 
 export function SessionViewPage({ mode }: { mode: 'done' | 'detail' }) {
   const { id } = useParams();
@@ -61,27 +62,55 @@ export function SessionViewPage({ mode }: { mode: 'done' | 'detail' }) {
           （{formatMinutes(durationMinutes(session.startAt, session.endAt))}）
         </p>
         <h2>{categoryNames(session, categories)}</h2>
-        {names && <p>{names}</p>}
+        {session.steps.length === 0 && names && <p>{names}</p>}
         {session.memo && <p>メモ：{session.memo}</p>}
         <p>
-          約 <span className={styles.bigNumber}>{session.kcal}</span> kcal
+          {mode === 'done' && session.steps.length > 0 ? '合計 ' : ''}約{' '}
+          <span className={styles.bigNumber}>{session.kcal}</span> kcal
         </p>
         <Sub>消費カロリーは推定値です（体重 {session.weightKg.toFixed(1)}kg で計算）。</Sub>
-        {/* このセッションで使った部位（F-BODY-04）。筋トレ系は濃い緑、ケア系だけの部位は水色 */}
+
+        {/* ステップごとの内訳（F-REC-13） */}
+        {session.steps.length > 0 && (
+          <ol className={styles.list} aria-label="種目ごとの内訳">
+            {session.steps.map((s, i) => (
+              <li key={`${i}-${s.exerciseId ?? s.categoryId}`}>
+                <div className={styles.row}>
+                  <span>
+                    {stepNumber(i)} {menuItemName(s, categories, exercises)}
+                  </span>
+                  <span>約{s.kcal}kcal</span>
+                </div>
+                <div className={styles.label}>
+                  {formatTime(s.startAt)}〜{formatTime(s.endAt)}（{formatElapsed(s.endAt - s.startAt)}）
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+
+        {/* このセッションで使った部位（F-BODY-04）。筋トレ系・有酸素は濃い緑、ケア系だけの部位は水色 */}
         <BodyMap
           size="small"
           colorOf={(region) => {
             const used = categories.filter(
               (c) => session.categoryIds.includes(c.id) && c.bodyRegions.includes(region),
             );
-            if (used.some((c) => c.group === 'strength')) return 'var(--color-primary-strong)';
+            if (used.some((c) => c.group !== 'care')) return 'var(--color-primary-strong)';
             if (used.length > 0) return 'var(--color-status-done)';
             return undefined;
           }}
         />
       </Card>
 
-      <HealthSendButton session={session} categories={categories} settings={settings} />
+      <ProteinCard session={session} />
+
+      <HealthSendButton
+        session={session}
+        categories={categories}
+        exercises={exercises}
+        settings={settings}
+      />
 
       <Actions>
         <LinkButton to={`/session/${session.id}/edit`}>編集</LinkButton>

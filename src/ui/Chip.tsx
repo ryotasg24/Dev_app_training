@@ -8,17 +8,25 @@ interface ChipProps {
   selected: boolean;
   onToggle: () => void;
   children: ReactNode;
+  /**
+   * select：選択（選ぶと塗りつぶし＋チェックの印）
+   * view：表示の切り替え（選ぶと太い枠。選択とは区別する。デザイン仕様書 7.3）
+   */
+  variant?: 'select' | 'view';
+  /** チェックの印の代わりに出す印（メニューの番号など） */
+  mark?: string;
 }
 
-export function Chip({ selected, onToggle, children }: ChipProps) {
+export function Chip({ selected, onToggle, children, variant = 'select', mark }: ChipProps) {
+  const selectedClass = variant === 'view' ? styles.current : styles.selected;
   return (
     <button
       type="button"
-      className={selected ? `${styles.chip} ${styles.selected}` : styles.chip}
+      className={selected ? `${styles.chip} ${selectedClass}` : styles.chip}
       aria-pressed={selected}
       onClick={onToggle}
     >
-      {selected && <span aria-hidden="true">✓ </span>}
+      {selected && variant === 'select' && <span aria-hidden="true">{mark ?? '✓'} </span>}
       {children}
     </button>
   );

@@ -22,7 +22,7 @@ interface CategorySeed {
   exercises: string[];
 }
 
-/** ケア系は回復管理しないが、設定でオンにしたときのために24時間を入れておく（基本設計書 4.3） */
+/** ケア系・有酸素は回復管理しないが、設定でオンにしたときのために24時間を入れておく（基本設計書 4.3） */
 const CARE_RECOVERY_HOURS = 24;
 
 const CATEGORY_SEEDS: CategorySeed[] = [
@@ -130,7 +130,20 @@ const CATEGORY_SEEDS: CategorySeed[] = [
     bodyRegions: ['face', 'neck'],
     exercises: ['あいうべ体操', '舌回し', '表情筋ストレッチ', '首・鎖骨まわりのほぐし'],
   },
+  // 有酸素は版3で追加。既存の利用者には、起動時の初期データの登録で足りないものとして加わる
+  {
+    id: 'cardio',
+    name: '有酸素',
+    group: 'cardio',
+    recoveryHours: CARE_RECOVERY_HOURS,
+    mets: 8.0,
+    bodyRegions: ['quads', 'hamstrings', 'glutes', 'calves'],
+    exercises: ['ランニング（屋外）', 'ランニング（屋内）'],
+  },
 ];
+
+/** 屋内のランニングの固定ID（ヘルスケアに送る種類の判定に使う。基本設計書 6.2） */
+export const RUNNING_INDOOR_ID = 'p-cardio-02';
 
 /**
  * 独自の種目の強度をMETsに換算する表（基本設計書 5.3）。

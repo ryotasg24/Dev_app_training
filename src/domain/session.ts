@@ -2,7 +2,8 @@
  * セッションの入力チェックと、保存する内容の組み立て（要件定義書 3.1、基本設計書 3.3、5.2、5.3）。
  */
 import { calcCalories, calcSessionMets } from './calories';
-import { MS_PER_MINUTE, toLocalDate } from './date';
+import { durationMinutes, MS_PER_MINUTE, toLocalDate } from './date';
+import { totalsOfSteps } from './steps';
 import type {
   Category,
   CategoryId,
@@ -70,27 +71,66 @@ export function buildSession(
   existing?: Session,
 ): Session {
   const weightKg = existing?.weightKg ?? context.currentWeightKg;
-  const mets = calcSessionMets(
-    draft.categoryIds,
-    draft.exercises,
-    context.categories,
-    context.exercises,
-  );
+
+  // ステップの記録がある記録の編集で、開始日時だけを変えた場合は、全ステップを同じだけずらす。
+  // それ以外を変えた場合は、ステップの記録を消して手入力と同じ計算にする（基本設計書 3.3 No.4）
+  const shiftedSteps =
+    existing && existing.steps.length > 0 && isOnlyStartShifted(draft, existing)
+      ? existing.steps.map((s) => ({
+          ...s,
+          startAt: s.startAt + (draft.startAt - existing.startAt),
+          endAt: s.endAt + (draft.startAt - existing.startAt),
+        }))
+      : [];
+
+  const mets =
+    shiftedSteps.length > 0
+      ? totalsOfSteps(shiftedSteps).mets
+      : calcSessionMets(draft.categoryIds, draft.exercises, context.categories, context.exercises);
+  const kcal =
+    shiftedSteps.length > 0
+      ? totalsOfSteps(shiftedSteps).kcal
+      : calcCalories(mets, weightKg, draft.endAt - draft.startAt);
+
   return {
     id: existing?.id ?? context.newId,
     createdAt: existing?.createdAt ?? context.now,
     updatedAt: context.now,
     deleted: 0,
     startAt: draft.startAt,
-    endAt: draft.endAt,
+    // ステップをずらした場合は、元の終了時刻（秒まで）を同じだけずらして使う
+    endAt:
+      shiftedSteps.length > 0 && existing
+        ? existing.endAt + (draft.startAt - existing.startAt)
+        : draft.endAt,
     localDate: toLocalDate(draft.startAt),
     source: existing?.source ?? draft.source,
     categoryIds: [...draft.categoryIds],
     exercises: draft.exercises.map((e) => ({ ...e })),
+    steps: shiftedSteps,
     memo: draft.memo.trim(),
     weightKg,
     mets,
-    kcal: calcCalories(mets, weightKg, draft.endAt - draft.startAt),
+    kcal,
     healthSentAt: existing?.healthSentAt ?? null,
   };
+}
+
+/**
+ * 編集で、開始日時以外（所要時間・カテゴリ・種目）が変わっていないか。
+ * カテゴリと種目は、順番を問わず同じものがそろっていれば同じとみなす。
+ */
+export function isOnlyStartShifted(draft: SessionDraft, existing: Session): boolean {
+  const sameSet = (a: readonly string[], b: readonly string[]) =>
+    a.length === b.length && a.every((x) => b.includes(x));
+  // 画面では所要時間を分で入力するため、分にそろえて比べる（秒の違いで記録が消えないように）
+  return (
+    durationMinutes(draft.startAt, draft.endAt) ===
+      durationMinutes(existing.startAt, existing.endAt) &&
+    sameSet(draft.categoryIds, existing.categoryIds) &&
+    sameSet(
+      draft.exercises.map((e) => e.exerciseId),
+      existing.exercises.map((e) => e.exerciseId),
+    )
+  );
 }

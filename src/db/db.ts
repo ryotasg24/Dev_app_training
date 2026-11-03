@@ -3,7 +3,11 @@
  * データベースの読み書きは db/ の中だけで行い、画面から直接 Dexie を操作しないこと。
  */
 import Dexie, { type EntityTable } from 'dexie';
-import { migrateCategoryToV2 } from '../domain/migration';
+import {
+  migrateActiveSessionToV3,
+  migrateCategoryToV2,
+  type ActiveSessionV2,
+} from '../domain/migration';
 import type {
   ActiveSession,
   Category,
@@ -24,8 +28,9 @@ export const DB_NAME = 'dat-training';
 /**
  * 現在のデータ形式の版。stores や保存する値の形を変えたら1つ上げ、upgrade で移行処理を書くこと（4.4）。
  * 版2：人体図の部位から腸腰筋（hipFlexors）を外した（domain/migration.ts）
+ * 版3：メニュー（ステップ）を追加した
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export class TrainingDb extends Dexie {
   sessions!: EntityTable<Session, 'id'>;
@@ -58,6 +63,21 @@ export class TrainingDb extends Dexie {
         .modify((category: { bodyRegions: string[] }) => {
           category.bodyRegions = migrateCategoryToV2(category).bodyRegions;
         });
+    });
+    // 版3：テーブルの定義は同じ。セッションにステップを加え、計測中のデータをステップの形に直す
+    this.version(3).upgrade(async (tx) => {
+      await tx
+        .table('sessions')
+        .toCollection()
+        .modify((session: { steps?: unknown[] }) => {
+          if (!session.steps) session.steps = [];
+        });
+      const exercises: Exercise[] = await tx.table('exercises').toArray();
+      const categoryOf = (id: string) => exercises.find((e) => e.id === id)?.categoryId;
+      const actives: (ActiveSessionV2 | ActiveSession)[] = await tx.table('activeSession').toArray();
+      for (const active of actives) {
+        await tx.table('activeSession').put(migrateActiveSessionToV3(active, categoryOf));
+      }
     });
   }
 

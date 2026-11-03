@@ -3,14 +3,17 @@
  */
 import { format } from 'date-fns';
 import { durationMinutes } from './date';
-import type { Category, Session } from './types';
+import { RUNNING_INDOOR_ID } from './master';
+import type { Category, Exercise, Session } from './types';
 
 /**
- * ショートカットに渡すワークアウトの種類。
+ * ショートカットに渡すワークアウトの種類（基本設計書 6.2）。
  * - strength：機能的筋力トレーニング（筋トレ系を1つ以上含む）
+ * - running：ランニング（屋外）（筋トレ系がなく、有酸素を含む）
+ * - runningIndoor：ランニング（屋内）（筋トレ系がなく、有酸素は屋内のランニングだけ）
  * - care：コアトレーニング（ケア系だけ）
  */
-export type HealthWorkoutType = 'strength' | 'care';
+export type HealthWorkoutType = 'strength' | 'running' | 'runningIndoor' | 'care';
 
 /** ショートカットに渡すJSON（基本設計書 6.3） */
 export interface HealthPayload {
@@ -27,20 +30,40 @@ export interface HealthPayload {
  * セッションのワークアウトの種類を決める（F-HLT-02）。
  */
 export function decideWorkoutType(
-  session: Pick<Session, 'categoryIds'>,
+  session: Pick<Session, 'categoryIds' | 'exercises' | 'steps'>,
   categories: readonly Category[],
+  exercises: readonly Exercise[],
 ): HealthWorkoutType {
-  const strengthIds = new Set(categories.filter((c) => c.group === 'strength').map((c) => c.id));
-  return session.categoryIds.some((id) => strengthIds.has(id)) ? 'strength' : 'care';
+  const groupOf = (id: string) => categories.find((c) => c.id === id)?.group;
+  if (session.categoryIds.some((id) => groupOf(id) === 'strength')) return 'strength';
+
+  const cardioIds = session.categoryIds.filter((id) => groupOf(id) === 'cardio');
+  if (cardioIds.length === 0) return 'care';
+
+  // 有酸素の中身（種目のID。種目なしは null）。屋内のランニングだけなら屋内、それ以外は屋外
+  const cardioItems: (string | null)[] =
+    session.steps.length > 0
+      ? session.steps.filter((s) => groupOf(s.categoryId) === 'cardio').map((s) => s.exerciseId)
+      : cardioIds.flatMap((categoryId) => {
+          const ids = session.exercises
+            .map((e) => e.exerciseId)
+            .filter((id) => exercises.find((x) => x.id === id)?.categoryId === categoryId);
+          return ids.length > 0 ? ids : [null];
+        });
+  return cardioItems.every((id) => id === RUNNING_INDOOR_ID) ? 'runningIndoor' : 'running';
 }
 
 /**
- * ショートカットに渡す内容を作る。
+ * ショートカットに渡す内容を作る。1つのセッションを1件のワークアウトにまとめる（F-HLT-02）。
  */
-export function buildHealthPayload(session: Session, categories: readonly Category[]): HealthPayload {
+export function buildHealthPayload(
+  session: Session,
+  categories: readonly Category[],
+  exercises: readonly Exercise[],
+): HealthPayload {
   return {
     v: 1,
-    type: decideWorkoutType(session, categories),
+    type: decideWorkoutType(session, categories, exercises),
     start: format(session.startAt, 'yyyy/MM/dd H:mm'),
     minutes: durationMinutes(session.startAt, session.endAt),
     kcal: session.kcal,

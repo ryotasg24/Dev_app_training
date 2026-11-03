@@ -36,6 +36,7 @@ export function makeSession(
     source: 'timer',
     categoryIds,
     exercises: [],
+    steps: [],
     memo: '',
     weightKg: 65,
     mets: 5,

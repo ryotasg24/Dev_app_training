@@ -3,10 +3,19 @@
  * 手順は実機での確認前の案。確認できたら、画面の写真などを加えて仕上げる。
  */
 import { useNavigate } from 'react-router';
+import type { HealthWorkoutType } from '../../domain/health';
 import { Button } from '../../ui/Button';
 import { Card, Sub } from '../../ui/Card';
 import { useSettings } from '../hooks';
 import styles from '../page.module.css';
+
+/** アプリから渡す type と、ヘルスケアの種類の対応（基本設計書 6.2） */
+const WORKOUT_TYPES: { type: HealthWorkoutType; label: string }[] = [
+  { type: 'strength', label: '機能的筋力トレーニング' },
+  { type: 'running', label: 'ランニング（屋外）' },
+  { type: 'runningIndoor', label: 'ランニング（屋内）' },
+  { type: 'care', label: 'コアトレーニング' },
+];
 
 export function ShortcutGuidePage() {
   const navigate = useNavigate();
@@ -39,21 +48,20 @@ export function ShortcutGuidePage() {
           <li>「辞書の値を取得」：キー「start」→ 続けて「日付を取得」で日付にする</li>
           <li>「辞書の値を取得」：キー「minutes」「kcal」「type」をそれぞれ取得</li>
           <li>
-            「もし」：「type」が「strength」なら
+            「もし」を4つ、入れ子にせずに並べる。それぞれの中に「ワークアウトを記録」を入れ、日付＝start、継続時間＝minutes（分）、カロリー＝kcal にする
             <ul>
-              <li>
-                「ワークアウトを記録」：種類「機能的筋力トレーニング」、日付＝start、継続時間＝minutes（分）、カロリー＝kcal
-              </li>
-            </ul>
-          </li>
-          <li>
-            「その他の場合」
-            <ul>
-              <li>「ワークアウトを記録」：種類「コアトレーニング」（値は上と同じ）</li>
+              {WORKOUT_TYPES.map((w) => (
+                <li key={w.type}>
+                  「type」が「{w.type}」なら → 種類「{w.label}」
+                </li>
+              ))}
             </ul>
           </li>
           <li>「通知を表示」：「ヘルスケアに記録しました」</li>
         </ol>
+        <Sub>
+          1回の記録は、合計の時間とカロリーで1件のワークアウトにまとめて送ります。筋トレ系を含む日は「機能的筋力トレーニング」になります。
+        </Sub>
       </Card>
 
       <Card title="3. 使い方">

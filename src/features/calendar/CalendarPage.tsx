@@ -37,8 +37,8 @@ export function CalendarPage() {
   if (!sessions || !categories || !exercises) return null;
 
   const live = sessions.filter((s) => s.deleted === 0);
-  const strengthIds = new Set(categories.filter((c) => c.group === 'strength').map((c) => c.id));
-  // 日ごとの印：筋トレ系を含む日は strength、ケア系だけの日は care
+  const strengthIds = new Set(categories.filter((c) => c.group !== 'care').map((c) => c.id));
+  // 日ごとの印：筋トレ系か有酸素を含む日は strength、ケア系だけの日は care
   const marks = new Map<string, 'strength' | 'care'>();
   for (const s of live) {
     const isStrength = s.categoryIds.some((id) => strengthIds.has(id));
@@ -104,7 +104,7 @@ export function CalendarPage() {
           <div className={pageStyles.legend}>
             <span>
               <span className={`${pageStyles.dot} ${styles.strength}`} />
-              筋トレ系を含む
+              筋トレ・有酸素を含む
             </span>
             <span>
               <span className={`${pageStyles.dot} ${styles.care}`} />

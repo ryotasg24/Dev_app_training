@@ -5,14 +5,20 @@
 import { useNavigate } from 'react-router';
 import { db } from '../../db/db';
 import { updateCategory, updateSettings } from '../../db/repositories';
-import type { SorenessLevel } from '../../domain/types';
+import type { CategoryGroup, SorenessLevel } from '../../domain/types';
 import { Button } from '../../ui/Button';
 import { Card, Sub } from '../../ui/Card';
 import { Checkbox, Field, Input } from '../../ui/Field';
 import { useCategories, useSettings } from '../hooks';
 import styles from '../page.module.css';
 
-const SORENESS_LABELS: { level: SorenessLevel; label: string }[] = [
+const GROUP_NAMES: Record<CategoryGroup, string> = {
+  strength: '筋トレ系',
+  care: 'ケア系',
+  cardio: '有酸素',
+};
+
+const SORENESS_LABELS:{ level: SorenessLevel; label: string }[] = [
   { level: 'none', label: 'なし' },
   { level: 'light', label: '軽い' },
   { level: 'strong', label: '強い' },
@@ -46,7 +52,7 @@ export function CategorySettingsPage() {
       <Sub>数値は一般的な目安です。変更すると、これから保存する記録と、回復状況の表示に反映されます。</Sub>
 
       {categories.map((c) => (
-        <Card key={c.id} title={c.name} aside={c.group === 'strength' ? '筋トレ系' : 'ケア系'}>
+        <Card key={c.id} title={c.name} aside={GROUP_NAMES[c.group]}>
           <Checkbox
             label="回復を管理する"
             checked={c.recoveryEnabled}
