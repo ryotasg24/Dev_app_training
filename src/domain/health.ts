@@ -15,10 +15,8 @@ import type { Category, Exercise, Session } from './types';
  */
 export type HealthWorkoutType = 'strength' | 'running' | 'runningIndoor' | 'care';
 
-/** ショートカットに渡すJSON（基本設計書 6.3） */
+/** ショートカットに渡す内容（基本設計書 6.3）。送るときは区切り文字の形式にする（buildShortcutText） */
 export interface HealthPayload {
-  /** 形式の版 */
-  v: 1;
   type: HealthWorkoutType;
   /** 開始日時。iPhoneの日本語表示と同じ形式（例：2026/11/03 21:00） */
   start: string;
@@ -62,7 +60,6 @@ export function buildHealthPayload(
   exercises: readonly Exercise[],
 ): HealthPayload {
   return {
-    v: 1,
     type: decideWorkoutType(session, categories, exercises),
     start: format(session.startAt, 'yyyy/MM/dd H:mm'),
     minutes: durationMinutes(session.startAt, session.endAt),
@@ -70,13 +67,27 @@ export function buildHealthPayload(
   };
 }
 
+/** ショートカットに渡す値の区切り文字 */
+export const SHORTCUT_SEPARATOR = '|';
+
+/**
+ * ショートカットに渡すテキストを作る。例：strength|2026/11/03 21:00|35|159
+ * 順番は「種類｜開始日時｜所要時間（分）｜カロリー」で、ショートカット側は「|」で分割して1〜4番目を取り出す。
+ *
+ * JSON形式で渡すと、ショートカットが自動で辞書に変換し、受け取ったときに値がばらばらになって
+ * 「項目を選択」が出てしまうため（2026-11-03 実機で確認）、ただのテキストとして扱われる形式にしている。
+ */
+export function buildShortcutText(payload: HealthPayload): string {
+  return [payload.type, payload.start, payload.minutes, payload.kcal].join(SHORTCUT_SEPARATOR);
+}
+
 /**
  * ショートカットを起動するURLを作る。
  * @param shortcutName 設定のショートカット名
- * @param payload 渡す内容（JSON文字列にしてテキストとして渡す）
+ * @param payload 渡す内容（区切り文字の形式のテキストにして渡す）
  */
 export function buildShortcutUrl(shortcutName: string, payload: HealthPayload): string {
   const name = encodeURIComponent(shortcutName);
-  const text = encodeURIComponent(JSON.stringify(payload));
+  const text = encodeURIComponent(buildShortcutText(payload));
   return `shortcuts://run-shortcut?name=${name}&input=text&text=${text}`;
 }
