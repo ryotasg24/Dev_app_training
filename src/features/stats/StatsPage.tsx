@@ -1,5 +1,5 @@
 /**
- * グラフ（基本設計書 3.3 No.7、F-GRA-01〜03）。
+ * グラフ（基本設計書 3.3 No.7、F-GRA-01〜03）。推移はマーカー付きの折れ線、カテゴリ別は横棒。
  * Chart.js は大きいので、この画面を開いたときだけ読み込む（App.tsx で遅延読み込み）。
  */
 import {
@@ -11,6 +11,7 @@ import {
   type ChartOptions,
 } from 'chart.js';
 import { addMonths, addWeeks, addYears, format, parseISO } from 'date-fns';
+import { ja } from 'date-fns/locale';
 import { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { formatMinutes, toLocalDate } from '../../domain/date';
@@ -21,6 +22,7 @@ import { Card } from '../../ui/Card';
 import { Chip, ChipGroup } from '../../ui/Chip';
 import { useAllSessions, useCategories } from '../hooks';
 import styles from '../page.module.css';
+import { TrendChart } from './TrendChart';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip);
 
@@ -37,6 +39,12 @@ const METRICS: { id: Metric; label: string }[] = [
   { id: 'kcal', label: '消費カロリー' },
 ];
 
+const METRIC_UNITS: Record<Metric, string> = {
+  trainedDays: '日',
+  minutes: '分',
+  kcal: 'kcal',
+};
+
 /** CSS変数の色を読む（ダークモードに合わせるため） */
 function cssColor(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -44,7 +52,8 @@ function cssColor(name: string): string {
 
 function bucketLabel(bucket: StatsBucket, period: StatsPeriod): string {
   if (period === 'year') return `${Number(bucket.key.slice(5))}月`;
-  if (period === 'week') return formatLocalDate(bucket.key);
+  // 週は7日分すべてを表示できるよう、短く「3(火)」にする
+  if (period === 'week') return format(parseISO(bucket.key), 'd(E)', { locale: ja });
   return String(Number(bucket.key.slice(8)));
 }
 
@@ -68,13 +77,22 @@ export default function StatsPage() {
   const barColor = cssColor('--color-primary-strong');
   const textColor = cssColor('--color-text-sub');
   const gridColor = cssColor('--color-border');
+
+  // カテゴリ別の回数（横棒グラフ）の設定
   const options: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
+    indexAxis: 'y',
+    animation: { duration: 500, easing: 'easeOutQuart' },
     plugins: { legend: { display: false } },
     scales: {
-      x: { ticks: { color: textColor, precision: 0 }, grid: { display: false } },
-      y: { beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor } },
+      x: {
+        beginAtZero: true,
+        border: { display: false },
+        ticks: { color: textColor, precision: 0, maxTicksLimit: 5 },
+        grid: { color: gridColor },
+      },
+      y: { border: { display: false }, ticks: { color: textColor }, grid: { display: false } },
     },
   };
 
@@ -128,20 +146,11 @@ export default function StatsPage() {
               </Chip>
             ))}
           </ChipGroup>
-          <div style={{ height: 240, marginTop: 12 }}>
-            <Bar
-              options={options}
-              data={{
-                labels: result.buckets.map((b) => bucketLabel(b, period)),
-                datasets: [
-                  {
-                    label: METRICS.find((m) => m.id === metric)?.label ?? '',
-                    data: result.buckets.map((b) => b[metric]),
-                    backgroundColor: barColor,
-                    borderRadius: 4,
-                  },
-                ],
-              }}
+          <div style={{ height: 260, marginTop: 12 }}>
+            <TrendChart
+              labels={result.buckets.map((b) => bucketLabel(b, period))}
+              values={result.buckets.map((b) => b[metric])}
+              unit={METRIC_UNITS[metric]}
             />
           </div>
           {metric === 'minutes' && <p className={styles.label}>単位：分</p>}
@@ -151,7 +160,7 @@ export default function StatsPage() {
         <Card title="カテゴリ別の回数">
           <div style={{ height: 40 + categoryRows.length * 28 }}>
             <Bar
-              options={{ ...options, indexAxis: 'y' }}
+              options={options}
               data={{
                 labels: categoryRows.map((r) => r.name),
                 datasets: [
@@ -159,7 +168,9 @@ export default function StatsPage() {
                     label: '回数',
                     data: categoryRows.map((r) => r.count),
                     backgroundColor: barColor,
-                    borderRadius: 4,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    barThickness: 14,
                   },
                 ],
               }}

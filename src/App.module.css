@@ -1,5 +1,5 @@
 /*
- * レイアウトの切り替え（基本設計書 3.4）。
+ * レイアウトの切り替え（基本設計書 3.4）と、画面遷移のアニメーション（デザイン仕様書 10.1）。
  * コンパクト（既定）：1列＋画面下部のタブ
  * ワイド（幅768px以上かつ高さ600px以上）：左側のメニュー
  */
@@ -10,7 +10,9 @@
 
 .main {
   padding: 16px;
-  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  /* 横に動くアニメーションの途中で、横スクロールが出ないようにする */
+  overflow-x: clip;
 }
 
 /* タブとメニューを隠す画面（計測中・入力画面など） */
@@ -25,19 +27,170 @@
   margin: 0 auto;
   padding: 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  overflow-x: clip;
 }
 
+/* ---------- 画面遷移（デザイン仕様書 10.1） ---------- */
+
+/* 画面全体：動きと同時にフェードさせる。ページ間の遷移は 280ms */
+.page {
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+/* 詳しい画面へ進む：右から（奥へ進む空間） */
+.push {
+  animation-name: fromRight;
+}
+
+/* 戻る：左から */
+.pop {
+  animation-name: fromLeft;
+}
+
+/* タブの移動：並びの向きに、少しだけ動かす */
+.tabForward {
+  animation-name: tabFromRight;
+  animation-duration: 240ms;
+}
+
+.tabBack {
+  animation-name: tabFromLeft;
+  animation-duration: 240ms;
+}
+
+/* メニューの選択・手入力：手前の層として、下から少し拡大しながら現れる */
+.sheet {
+  animation-name: sheetUp;
+  animation-duration: 320ms;
+}
+
+.fade {
+  animation-name: fadeIn;
+  animation-duration: 200ms;
+}
+
+/*
+ * 画面の中のカードを、上から順に少しずつ遅らせて表示する（カスケード）。
+ * 画面全体の動きより小さく速く（ページ内の動きは速くする）。
+ */
+.page > * > * {
+  animation: rise 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page > * > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.page > * > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+
+.page > * > *:nth-child(4) {
+  animation-delay: 120ms;
+}
+
+.page > * > *:nth-child(5) {
+  animation-delay: 160ms;
+}
+
+.page > * > *:nth-child(n + 6) {
+  animation-delay: 200ms;
+}
+
+@keyframes fromRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tabFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tabFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sheetUp {
+  from {
+    opacity: 0;
+    transform: translateY(32px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- タブ（コンパクト） ---------- */
+
+/* すりガラスのような半透明のタブ。後ろの内容がうっすら透ける */
 .nav {
   position: fixed;
   inset: auto 0 0 0;
+  z-index: 10;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  padding-bottom: env(safe-area-inset-bottom);
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
 }
 
-/* コンパクト：アイコンの下に小さな文字 */
+/* アイコンの下に小さな文字 */
 .navItem,
 .navActive {
   display: flex;
@@ -45,10 +198,26 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 56px;
+  min-height: 52px;
   font-size: 0.6875rem;
+  letter-spacing: 0.02em;
   color: var(--color-text-sub);
   text-decoration: none;
+  transition: color 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 選んでいるタブは、アイコンの後ろに淡緑色の丸みのある帯を出す */
+.navIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 30px;
+  border-radius: 999px;
+  transition:
+    background-color 200ms ease,
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .navActive {
@@ -56,10 +225,32 @@
   font-weight: 700;
 }
 
+.navActive .navIcon {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  animation: pillIn 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.navItem:active .navIcon {
+  transform: scale(0.9);
+}
+
+@keyframes pillIn {
+  from {
+    transform: scaleX(0.6);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* ---------- メニュー（ワイド） ---------- */
 @media (min-width: 768px) and (min-height: 600px) {
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
+    grid-template-columns: 220px 1fr;
   }
 
   .nav {
@@ -68,36 +259,48 @@
     height: 100dvh;
     display: flex;
     flex-direction: column;
+    gap: 4px;
+    padding: 24px 12px;
     border-top: none;
     border-right: 1px solid var(--color-border);
-    padding: 16px 8px;
   }
 
-  /* ワイド：アイコンの右に文字 */
+  /* アイコンの右に文字 */
   .navItem,
   .navActive {
     flex-direction: row;
-    gap: 12px;
-    font-size: 1rem;
     justify-content: flex-start;
-    padding: 0 16px;
+    gap: 8px;
     min-height: 48px;
-    border-radius: 8px;
+    padding: 0 8px;
+    font-size: 0.9375rem;
+    border-radius: 14px;
+    transition:
+      background-color 180ms ease,
+      color 180ms ease;
+  }
+
+  .navIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
   }
 
   .navItem:hover {
     background: var(--color-hover);
+    color: var(--color-text);
   }
 
+  /* 文字は本文の色にして、ダークモードでも読めるようにする（アイコンの帯が淡緑色） */
   .navActive {
-    background: var(--color-primary);
-    color: var(--color-on-primary);
+    background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+    color: var(--color-text);
   }
 
   .main {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 24px;
+    padding: 32px;
   }
 }

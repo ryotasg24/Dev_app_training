@@ -58,13 +58,16 @@ function SessionForm({
   const sessions = useAllSessions();
   const now = useNow(60_000);
 
-  // 初期値：編集なら元の値。新規なら、カレンダーから来た日（なければ今日）の現在時刻の30分前
+  // 初期値：編集なら元の値。新規なら、現在時刻の30分前（カレンダーから来た場合は、その日の同じ時刻）。
+  // 日付と時刻を同じ「30分前」から作る。別々に作ると、0時直後に「今日の日付＋昨日の時刻」になり、
+  // 開始日時が未来になって保存できなかったため（2026-11-04 修正）
   const [initial] = useState(() => {
     if (existing) return existing;
-    const now = Date.now();
-    const date = searchParams.get('date') ?? toLocalDate(now);
-    const time = format(now - 30 * MS_PER_MINUTE, 'HH:mm');
-    const startAt = new Date(`${date}T${time}`).getTime();
+    const defaultStart = Date.now() - 30 * MS_PER_MINUTE;
+    const date = searchParams.get('date') ?? toLocalDate(defaultStart);
+    let startAt = new Date(`${date}T${format(defaultStart, 'HH:mm')}`).getTime();
+    // カレンダーで今日を選んだ0時直後などに、開始が未来になる場合は、その日の0:00にする
+    if (startAt > Date.now()) startAt = new Date(`${date}T00:00`).getTime();
     return { startAt, endAt: startAt + 30 * MS_PER_MINUTE, categoryIds: [], exercises: [], memo: '' };
   });
 

@@ -3,8 +3,17 @@
  * GitHub Pagesで再読み込みしても404にならないよう、ハッシュ方式（#/calendar）を使う。
  */
 import { IconCalendar, IconChartBar, IconHome, IconSettings } from '@tabler/icons-react';
-import { lazy, Suspense } from 'react';
-import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router';
+import { lazy, Suspense, useState } from 'react';
+import {
+  HashRouter,
+  Navigate,
+  NavLink,
+  Route,
+  Routes,
+  useLocation,
+  useNavigationType,
+} from 'react-router';
+import { decideTransition, type PageTransition } from './features/navigation';
 import { CalendarPage } from './features/calendar/CalendarPage';
 import { HomePage } from './features/home/HomePage';
 import { useSettings } from './features/hooks';
@@ -44,8 +53,22 @@ export function App() {
 
 function Layout() {
   const location = useLocation();
+  const navigationType = useNavigationType();
   const settings = useSettings();
   const isFocus = FOCUS_PATHS.some((re) => re.test(location.pathname));
+
+  // 画面が変わったときに、前の画面のパスから遷移の種類を決める（デザイン仕様書 10.1）。
+  // 描画中に前回の値と比べて state を更新する、React の推奨する書き方にしている
+  const [transition, setTransition] = useState<{ key: string; path: string; kind: PageTransition }>(
+    () => ({ key: location.key, path: location.pathname, kind: 'fade' }),
+  );
+  if (transition.key !== location.key) {
+    setTransition({
+      key: location.key,
+      path: location.pathname,
+      kind: decideTransition(transition.path, location.pathname, navigationType),
+    });
+  }
 
   // 設定の読み込みが終わるまでは何も表示しない（初回案内へのちらつきを防ぐ）
   if (!settings) return null;
@@ -64,7 +87,9 @@ function Layout() {
               end={item.to === '/'}
               className={({ isActive }) => (isActive ? styles.navActive : styles.navItem)}
             >
-              <item.Icon size={24} stroke={1.75} aria-hidden="true" />
+              <span className={styles.navIcon}>
+                <item.Icon size={22} stroke={1.75} aria-hidden="true" />
+              </span>
               <span>{item.label}</span>
             </NavLink>
           ))}
@@ -72,8 +97,10 @@ function Layout() {
       )}
       <main className={isFocus ? styles.focusMain : styles.main}>
         <UpdateBanner />
-        <Suspense fallback={null}>
-          <Routes>
+        {/* 画面ごとに作り直して、入ってくるときのアニメーションを付ける */}
+        <div key={location.key} className={`${styles.page} ${styles[transition.kind] ?? ''}`}>
+          <Suspense fallback={null}>
+            <Routes location={location}>
             <Route path="/" element={<HomePage />} />
             <Route path="/session/plan" element={<MenuPlanPage />} />
             <Route path="/session/active" element={<ActiveSessionPage />} />
@@ -89,8 +116,9 @@ function Layout() {
             <Route path="/settings/shortcut" element={<ShortcutGuidePage />} />
             <Route path="/welcome" element={<WelcomePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+            </Routes>
+          </Suspense>
+        </div>
       </main>
     </div>
   );
