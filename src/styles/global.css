@@ -1,0 +1,50 @@
+/*
+ * 全体の基本スタイル。色はデザイン仕様書（案）の値。確定したら合わせて変更する。
+ * ダークモードは端末の設定に合わせて自動で切り替える。
+ */
+:root {
+  color-scheme: light dark;
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-text: #1f2937;
+  --color-text-sub: #6b7280;
+  --color-border: #e5e7eb;
+  --color-hover: #f0f1f4;
+  --color-primary: #2563eb;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI',
+    'Meiryo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #111827;
+    --color-surface: #1f2937;
+    --color-text: #f3f4f6;
+    --color-text-sub: #9ca3af;
+    --color-border: #374151;
+    --color-hover: #2b3545;
+    --color-primary: #60a5fa;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
