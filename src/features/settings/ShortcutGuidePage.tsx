@@ -75,6 +75,11 @@ export function ShortcutGuidePage() {
             </ul>
           </li>
           <li>
+            3番目（minutes）と4番目（kcal）は、「リストから項目を取得」と「変数を設定」の間に「
+            <strong>入力から数値を取得</strong>
+            」を入れ、変数には変換後の「数字」を設定する（テキストのままだと記録できないため）
+          </li>
+          <li>
             「<strong>入力から日付を取得</strong>」：入力に変数「start」を指定する
           </li>
         </ol>
@@ -102,6 +107,9 @@ export function ShortcutGuidePage() {
               <li>日付：「日付」（入力から日付を取得の結果）</li>
               <li>継続時間：変数「minutes」、単位は「分」</li>
               <li>カロリー：変数「kcal」</li>
+              <li>
+                距離：<strong>0</strong>（km）を入力する。薄く表示される「10」は見本で、空欄のままだと実行に失敗する
+              </li>
             </ul>
           </li>
           <li>最後に「通知を表示」：「ヘルスケアに記録しました」</li>
