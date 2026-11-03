@@ -2,6 +2,7 @@
  * 画面の切り替えの定義（基本設計書 3.1、3.2）。
  * GitHub Pagesで再読み込みしても404にならないよう、ハッシュ方式（#/calendar）を使う。
  */
+import { IconCalendar, IconChartBar, IconHome, IconSettings } from '@tabler/icons-react';
 import { lazy, Suspense } from 'react';
 import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router';
 import { CalendarPage } from './features/calendar/CalendarPage';
@@ -21,11 +22,12 @@ import styles from './App.module.css';
 // グラフの画面は Chart.js が大きいため、開いたときに読み込む（非機能・性能）
 const StatsPage = lazy(() => import('./features/stats/StatsPage'));
 
+// アイコンは Tabler Icons（MIT。デザイン仕様書 9章）
 const NAV_ITEMS = [
-  { to: '/', label: 'ホーム' },
-  { to: '/calendar', label: 'カレンダー' },
-  { to: '/stats', label: 'グラフ' },
-  { to: '/settings', label: '設定' },
+  { to: '/', label: 'ホーム', Icon: IconHome },
+  { to: '/calendar', label: 'カレンダー', Icon: IconCalendar },
+  { to: '/stats', label: 'グラフ', Icon: IconChartBar },
+  { to: '/settings', label: '設定', Icon: IconSettings },
 ];
 
 /** タブとメニューを隠して、操作に集中させる画面（基本設計書 3.1） */
@@ -61,7 +63,8 @@ function Layout() {
               end={item.to === '/'}
               className={({ isActive }) => (isActive ? styles.navActive : styles.navItem)}
             >
-              {item.label}
+              <item.Icon size={24} stroke={1.75} aria-hidden="true" />
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>

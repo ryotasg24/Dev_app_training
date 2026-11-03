@@ -40,7 +40,6 @@ export type BodyRegionId =
   | 'triceps'
   | 'abs'
   | 'obliques'
-  | 'hipFlexors'
   | 'hipJoint'
   | 'lats'
   | 'erectors'

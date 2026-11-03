@@ -2,6 +2,7 @@
  * 「ヘルスケアに送る」ボタン（F-HLT-01、03、基本設計書 6.5）。
  * ショートカットが成功したかはアプリから分からないため、戻ってきたときに利用者にたずねる。
  */
+import { IconHeartbeat } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 import { db } from '../../db/db';
 import { markHealthSent } from '../../db/sessionRepository';
@@ -61,6 +62,7 @@ export function HealthSendButton({ session, categories, settings }: Props) {
         </Notice>
       )}
       <Button variant={alreadySent ? 'secondary' : 'primary'} block onClick={send}>
+        <IconHeartbeat size={22} aria-hidden="true" />
         {alreadySent ? 'もう一度ヘルスケアに送る' : 'ヘルスケアに送る'}
       </Button>
       <Sub>

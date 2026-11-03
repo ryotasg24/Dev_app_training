@@ -22,8 +22,8 @@ export default defineConfig({
     VitePWA({
       // 利用者が［更新する］を押してから新しい版に切り替える（基本設計書 7.3）
       registerType: 'prompt',
-      // アイコンはデザイン仕様書の確定後に public/ に追加する
-      includeAssets: [],
+      // アイコンは Tabler Icons のバーベル（MIT。デザイン仕様書 9章）から作った画像
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'third-party-licenses.txt'],
       manifest: {
         id: BASE_PATH,
         name: '筋トレ記録',
@@ -35,11 +35,16 @@ export default defineConfig({
         // 画面の背景色（デザイン仕様書 3.1 の --color-bg）に合わせる
         theme_color: '#F5F6F8',
         background_color: '#F5F6F8',
-        icons: [],
+        icons: [
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+          // 端末によって丸などに切り取られても、絵が欠けないように余白を大きく取ったもの
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
       },
       workbox: {
         // ビルドしたファイルをすべて事前にキャッシュし、オフラインで起動できるようにする（F-DATA-06）
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,txt}'],
       },
     }),
   ],

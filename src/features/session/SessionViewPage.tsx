@@ -6,6 +6,7 @@ import { db } from '../../db/db';
 import { softDeleteSession } from '../../db/sessionRepository';
 import { durationMinutes, formatMinutes } from '../../domain/date';
 import { formatDate, formatTime } from '../../domain/format';
+import { BodyMap } from '../../ui/bodyMap/BodyMap';
 import { Button, LinkButton } from '../../ui/Button';
 import { Actions, Card, Sub } from '../../ui/Card';
 import { useAllExercises, useCategories, useSession, useSettings } from '../hooks';
@@ -66,6 +67,18 @@ export function SessionViewPage({ mode }: { mode: 'done' | 'detail' }) {
           約 <span className={styles.bigNumber}>{session.kcal}</span> kcal
         </p>
         <Sub>消費カロリーは推定値です（体重 {session.weightKg.toFixed(1)}kg で計算）。</Sub>
+        {/* このセッションで使った部位（F-BODY-04）。筋トレ系は濃い緑、ケア系だけの部位は水色 */}
+        <BodyMap
+          size="small"
+          colorOf={(region) => {
+            const used = categories.filter(
+              (c) => session.categoryIds.includes(c.id) && c.bodyRegions.includes(region),
+            );
+            if (used.some((c) => c.group === 'strength')) return 'var(--color-primary-strong)';
+            if (used.length > 0) return 'var(--color-status-done)';
+            return undefined;
+          }}
+        />
       </Card>
 
       <HealthSendButton session={session} categories={categories} settings={settings} />

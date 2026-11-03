@@ -99,7 +99,8 @@ const CATEGORY_SEEDS: CategorySeed[] = [
     group: 'care',
     recoveryHours: CARE_RECOVERY_HOURS,
     mets: 2.3,
-    bodyRegions: ['abs', 'hipFlexors', 'glutes'],
+    // 人体図の素材に腸腰筋がないため、腹（インナー）・臀部・腰で表す（デザイン仕様書 8.2）
+    bodyRegions: ['abs', 'glutes', 'erectors'],
     exercises: ['ドローイン', 'デッドバグ', '腸腰筋ストレッチ', 'キャット＆カウ'],
   },
   {

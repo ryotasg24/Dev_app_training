@@ -1,6 +1,7 @@
 /**
  * カテゴリと種目の選択（F-REC-02、03、09）。計測中・手入力・編集の画面で共通に使う。
  */
+import { IconBarbell, IconStretching } from '@tabler/icons-react';
 import type { Category, CategoryId, Exercise, SessionExercise } from '../../domain/types';
 import { Button } from '../../ui/Button';
 import { Chip, ChipGroup } from '../../ui/Chip';
@@ -51,8 +52,26 @@ export function CategoryPicker({
   };
 
   const groups = [
-    { label: '筋トレ系', items: categories.filter((c) => c.group === 'strength') },
-    { label: 'ケア系', items: categories.filter((c) => c.group === 'care') },
+    {
+      key: 'strength',
+      label: (
+        <>
+          <IconBarbell size={18} aria-hidden="true" />
+          筋トレ系
+        </>
+      ),
+      items: categories.filter((c) => c.group === 'strength'),
+    },
+    {
+      key: 'care',
+      label: (
+        <>
+          <IconStretching size={18} aria-hidden="true" />
+          ケア系
+        </>
+      ),
+      items: categories.filter((c) => c.group === 'care'),
+    },
   ];
 
   const selectedCategories = categories.filter((c) => value.categoryIds.includes(c.id));
@@ -67,7 +86,7 @@ export function CategoryPicker({
 
       <div style={{ marginTop: 12 }}>
         {groups.map((g) => (
-          <ChipGroup key={g.label} label={g.label}>
+          <ChipGroup key={g.key} label={g.label}>
             {g.items.map((c) => (
               <Chip
                 key={c.id}

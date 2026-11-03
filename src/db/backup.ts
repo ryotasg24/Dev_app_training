@@ -2,6 +2,7 @@
  * バックアップの書き出しと復元（要件定義書 F-DATA-03、04、基本設計書 4.5）。
  */
 import { buildBackupFile, type BackupData, type BackupFile } from '../domain/backupFormat';
+import { migrateBackupData } from '../domain/migration';
 import { SCHEMA_VERSION, type TrainingDb } from './db';
 
 /** 全テーブルを読み、バックアップファイルの中身を作る。削除済みのデータも含める */
@@ -32,8 +33,8 @@ export async function recordBackupDone(database: TrainingDb, now: number): Promi
  * ファイルは checkBackupFile で確認済みのものを渡すこと。
  */
 export async function restoreBackup(database: TrainingDb, file: BackupFile): Promise<void> {
-  // データ形式が古いファイルは、ここで新しい形式に直す（版1しかないため、今は何もしない）
-  const data = file.data;
+  // データ形式が古いファイルは、ここで新しい形式に直す
+  const data = migrateBackupData(file.data, file.schemaVersion);
 
   await database.transaction('rw', [...database.dataTables, database.meta], async () => {
     await Promise.all(database.dataTables.map((table) => table.clear()));

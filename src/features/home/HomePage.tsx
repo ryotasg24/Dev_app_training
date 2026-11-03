@@ -1,6 +1,7 @@
 /**
  * ホーム（基本設計書 3.3 No.1）。
  */
+import { IconPencilPlus, IconPlayerPlay, IconStopwatch } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
 import { db } from '../../db/db';
 import { startActiveSession } from '../../db/sessionRepository';
@@ -75,14 +76,17 @@ export function HomePage() {
           {/* 起動から2タップ以内で開始できるよう、開始ボタンを最初に置く（非機能・使いやすさ） */}
           {active ? (
             <LinkButton to="/session/active" variant="start" block>
+              <IconStopwatch size={28} aria-hidden="true" />
               計測中 {formatElapsed(now - active.startAt)}
             </LinkButton>
           ) : (
             <Button variant="start" block onClick={() => void start()}>
+              <IconPlayerPlay size={28} aria-hidden="true" />
               トレーニング開始
             </Button>
           )}
           <LinkButton to="/session/new" variant="text">
+            <IconPencilPlus size={20} aria-hidden="true" />
             手入力で記録
           </LinkButton>
 

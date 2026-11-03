@@ -1,0 +1,70 @@
+.map {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.side {
+  flex: 1;
+  max-width: 220px;
+  margin: 0;
+  text-align: center;
+}
+
+.small .side {
+  max-width: 110px;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  /* 横長の画面で縦に伸びすぎないようにする */
+  max-height: 60dvh;
+  display: block;
+}
+
+.outline {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 2;
+}
+
+/* 色を付けない部分（手・足・すねなど） */
+.base {
+  fill: var(--color-body-base);
+  stroke: var(--color-surface);
+  stroke-width: 2;
+}
+
+/* 部位：色の指定がなければ「記録なし」の色 */
+.region {
+  fill: var(--color-status-none);
+  stroke: var(--color-surface);
+  stroke-width: 2;
+  transition: opacity 0.15s;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:focus {
+  outline: none;
+}
+
+.clickable:focus-visible,
+.selected {
+  stroke: var(--color-primary-strong);
+  stroke-width: 8;
+}
+
+@media (hover: hover) {
+  .clickable:hover {
+    opacity: 0.8;
+  }
+}
+
+.caption {
+  font-size: 0.8125rem;
+  color: var(--color-text-sub);
+}

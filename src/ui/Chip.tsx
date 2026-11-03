@@ -25,7 +25,7 @@ export function Chip({ selected, onToggle, children }: ChipProps) {
 }
 
 /** チップを折り返して並べる */
-export function ChipGroup({ label, children }: { label?: string; children: ReactNode }) {
+export function ChipGroup({ label, children }: { label?: ReactNode; children: ReactNode }) {
   return (
     <div className={styles.group}>
       {label && <div className={styles.label}>{label}</div>}

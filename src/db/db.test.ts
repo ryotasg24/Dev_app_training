@@ -1,4 +1,5 @@
 import 'fake-indexeddb/auto';
+import Dexie from 'dexie';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { checkBackupFile } from '../domain/backupFormat';
 import { jst } from '../domain/testHelpers';
@@ -66,6 +67,28 @@ describe('計測して保存する（F-REC-01〜05）', () => {
     await startActiveSession(database, jst('2026-11-03T21:00'));
     const again = await startActiveSession(database, jst('2026-11-03T21:10'));
     expect(again.startAt).toBe(jst('2026-11-03T21:00'));
+  });
+});
+
+describe('データ形式の移行（基本設計書 4.4）', () => {
+  it('版1のデータベースを開くと、反り腰の部位から腸腰筋が外れ、ほかの値は残る', async () => {
+    const name = `migrate-${dbCount}`;
+    // 版1のデータベースを、当時の定義のまま作る
+    const v1 = new Dexie(name);
+    v1.version(1).stores({ categories: 'id', meta: 'key' });
+    await v1.open();
+    await v1.table('categories').add({
+      id: 'posture',
+      bodyRegions: ['abs', 'hipFlexors', 'glutes'],
+      recoveryHours: 30,
+    });
+    v1.close();
+
+    const upgraded = new TrainingDb(name);
+    const posture = await upgraded.categories.get('posture');
+    expect(posture?.bodyRegions).toEqual(['abs', 'glutes', 'erectors']);
+    expect(posture?.recoveryHours).toBe(30);
+    await upgraded.delete();
   });
 });
 

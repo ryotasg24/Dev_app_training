@@ -88,7 +88,8 @@ describe('calcRegionStatuses（基本設計書 5.4）', () => {
     ];
     const map = calcRegionStatuses(categories, recoveries);
     expect(map.get('glutes')).toBe('fatigued');
-    expect(map.get('hipFlexors')).toBe('doneToday');
+    // 腰は背中（記録なし）と反り腰（実施済み）が重なる → 実施済み
+    expect(map.get('erectors')).toBe('doneToday');
     expect(map.get('chest')).toBe('none');
   });
 });

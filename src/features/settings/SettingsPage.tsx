@@ -1,6 +1,7 @@
 /**
  * 設定・プロフィール（基本設計書 3.3 No.9、F-SET-01〜04、F-DATA-03、04、07）。
  */
+import { IconDownload, IconFileExport, IconUpload } from '@tabler/icons-react';
 import { useEffect, useRef, useState, type FocusEvent } from 'react';
 import { db } from '../../db/db';
 import { recordWeight, updateSettings } from '../../db/repositories';
@@ -159,12 +160,15 @@ function SettingsForm({
             </Sub>
             <Stack>
               <Button block onClick={() => void runBackupExport().then(setDataMessage)}>
+                <IconDownload size={20} aria-hidden="true" />
                 バックアップを書き出す
               </Button>
               <Button variant="secondary" block onClick={() => fileRef.current?.click()}>
+                <IconUpload size={20} aria-hidden="true" />
                 バックアップから復元する
               </Button>
               <Button variant="secondary" block onClick={() => void runCsvExport().then(setDataMessage)}>
+                <IconFileExport size={20} aria-hidden="true" />
                 記録をCSVで書き出す
               </Button>
             </Stack>
@@ -201,6 +205,12 @@ function SettingsForm({
             <Sub>版：{__APP_VERSION__}</Sub>
             <Sub>
               消費カロリーと回復時間は一般的な目安にもとづく推定値で、医学的な助言ではありません。
+            </Sub>
+            <Sub>
+              人体図：react-native-body-highlighter（MIT）／アイコン：Tabler Icons（MIT）。
+              <a href={`${import.meta.env.BASE_URL}third-party-licenses.txt`} target="_blank" rel="noreferrer">
+                ライセンス表示
+              </a>
             </Sub>
           </Card>
         </Stack>

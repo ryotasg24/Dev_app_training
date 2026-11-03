@@ -2,7 +2,6 @@
  * レイアウトの切り替え（基本設計書 3.4）。
  * コンパクト（既定）：1列＋画面下部のタブ
  * ワイド（幅768px以上かつ高さ600px以上）：左側のメニュー
- * 見た目の細部はデザイン仕様書の確定後に整える。
  */
 .layout {
   min-height: 100dvh;
@@ -38,12 +37,16 @@
   border-top: 1px solid var(--color-border);
 }
 
+/* コンパクト：アイコンの下に小さな文字 */
 .navItem,
 .navActive {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
   min-height: 56px;
+  font-size: 0.6875rem;
   color: var(--color-text-sub);
   text-decoration: none;
 }
@@ -70,8 +73,12 @@
     padding: 16px 8px;
   }
 
+  /* ワイド：アイコンの右に文字 */
   .navItem,
   .navActive {
+    flex-direction: row;
+    gap: 12px;
+    font-size: 1rem;
     justify-content: flex-start;
     padding: 0 16px;
     min-height: 48px;

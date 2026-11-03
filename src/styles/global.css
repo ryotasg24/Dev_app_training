@@ -30,6 +30,8 @@
   --color-status-recovered: #22c55e;
   --color-status-done: #06b6d4;
   --color-status-none: #d1d5db;
+  /* 人体図の、色を付けない部分（手・足・すねなど） */
+  --color-body-base: #e5e7eb;
 
   /* お知らせの帯 */
   --color-notice-warn: #f59e0b;
@@ -65,6 +67,7 @@
     --color-status-recovered: #4ade80;
     --color-status-done: #22d3ee;
     --color-status-none: #4b5563;
+    --color-body-base: #374151;
     --color-notice-warn: #fbbf24;
     --color-notice-info: #cee6c1;
     --shadow-card: none;
