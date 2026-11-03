@@ -1,0 +1,53 @@
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.header h2 {
+  margin: 0;
+}
+
+.aside {
+  color: var(--color-text-sub);
+  font-size: 0.8125rem;
+}
+
+.notice {
+  border-left: 4px solid;
+}
+
+.warn {
+  border-left-color: var(--color-notice-warn);
+}
+
+.info {
+  border-left-color: var(--color-notice-info);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sub {
+  color: var(--color-text-sub);
+  font-size: 0.8125rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}

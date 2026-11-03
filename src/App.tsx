@@ -1,12 +1,25 @@
 /**
- * 画面の切り替えの定義（基本設計書 3.1）。
+ * 画面の切り替えの定義（基本設計書 3.1、3.2）。
  * GitHub Pagesで再読み込みしても404にならないよう、ハッシュ方式（#/calendar）を使う。
- *
- * 各画面は、デザイン仕様書の確定後に作る。今は仮の画面を表示する。
  */
-import { HashRouter, NavLink, Route, Routes } from 'react-router';
+import { lazy, Suspense } from 'react';
+import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router';
+import { CalendarPage } from './features/calendar/CalendarPage';
+import { HomePage } from './features/home/HomePage';
+import { useSettings } from './features/hooks';
+import { ActiveSessionPage } from './features/session/ActiveSessionPage';
+import { SessionFormPage } from './features/session/SessionFormPage';
+import { SessionViewPage } from './features/session/SessionViewPage';
+import { CategorySettingsPage } from './features/settings/CategorySettingsPage';
+import { ExercisesPage } from './features/settings/ExercisesPage';
+import { SettingsPage } from './features/settings/SettingsPage';
+import { ShortcutGuidePage } from './features/settings/ShortcutGuidePage';
+import { WelcomePage } from './features/welcome/WelcomePage';
 import { UpdateBanner } from './ui/UpdateBanner';
 import styles from './App.module.css';
+
+// グラフの画面は Chart.js が大きいため、開いたときに読み込む（非機能・性能）
+const StatsPage = lazy(() => import('./features/stats/StatsPage'));
 
 const NAV_ITEMS = [
   { to: '/', label: 'ホーム' },
@@ -15,26 +28,31 @@ const NAV_ITEMS = [
   { to: '/settings', label: '設定' },
 ];
 
-const ROUTES = [
-  { path: '/', title: 'ホーム' },
-  { path: '/session/active', title: '計測中' },
-  { path: '/session/new', title: '手入力で記録' },
-  { path: '/session/:id', title: 'セッション詳細' },
-  { path: '/session/:id/done', title: '記録の確認' },
-  { path: '/session/:id/edit', title: 'セッションの編集' },
-  { path: '/calendar', title: 'カレンダー' },
-  { path: '/stats', title: 'グラフ' },
-  { path: '/settings', title: '設定・プロフィール' },
-  { path: '/settings/categories', title: 'カテゴリの詳細設定' },
-  { path: '/settings/exercises', title: '種目管理' },
-  { path: '/settings/shortcut', title: 'ショートカットの導入手順' },
-  { path: '/welcome', title: '初回案内' },
-];
+/** タブとメニューを隠して、操作に集中させる画面（基本設計書 3.1） */
+const FOCUS_PATHS = [/^\/session\/active$/, /^\/session\/new$/, /^\/session\/[^/]+\/(done|edit)$/, /^\/welcome$/];
 
 export function App() {
   return (
     <HashRouter>
-      <div className={styles.layout}>
+      <Layout />
+    </HashRouter>
+  );
+}
+
+function Layout() {
+  const location = useLocation();
+  const settings = useSettings();
+  const isFocus = FOCUS_PATHS.some((re) => re.test(location.pathname));
+
+  // 設定の読み込みが終わるまでは何も表示しない（初回案内へのちらつきを防ぐ）
+  if (!settings) return null;
+  if (!settings.onboardingDone && location.pathname !== '/welcome') {
+    return <Navigate to="/welcome" replace />;
+  }
+
+  return (
+    <div className={isFocus ? styles.focusLayout : styles.layout}>
+      {!isFocus && (
         <nav className={styles.nav} aria-label="メインメニュー">
           {NAV_ITEMS.map((item) => (
             <NavLink
@@ -47,25 +65,28 @@ export function App() {
             </NavLink>
           ))}
         </nav>
-        <main className={styles.main}>
-          <UpdateBanner />
+      )}
+      <main className={isFocus ? styles.focusMain : styles.main}>
+        <UpdateBanner />
+        <Suspense fallback={null}>
           <Routes>
-            {ROUTES.map((route) => (
-              <Route key={route.path} path={route.path} element={<Placeholder title={route.title} />} />
-            ))}
-            <Route path="*" element={<Placeholder title="ページが見つかりません" />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/session/active" element={<ActiveSessionPage />} />
+            <Route path="/session/new" element={<SessionFormPage mode="new" />} />
+            <Route path="/session/:id" element={<SessionViewPage mode="detail" />} />
+            <Route path="/session/:id/done" element={<SessionViewPage mode="done" />} />
+            <Route path="/session/:id/edit" element={<SessionFormPage mode="edit" />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/stats" element={<StatsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings/categories" element={<CategorySettingsPage />} />
+            <Route path="/settings/exercises" element={<ExercisesPage />} />
+            <Route path="/settings/shortcut" element={<ShortcutGuidePage />} />
+            <Route path="/welcome" element={<WelcomePage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </main>
-      </div>
-    </HashRouter>
-  );
-}
-
-function Placeholder({ title }: { title: string }) {
-  return (
-    <section>
-      <h1>{title}</h1>
-      <p>この画面は準備中です。</p>
-    </section>
+        </Suspense>
+      </main>
+    </div>
   );
 }

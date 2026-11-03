@@ -7,8 +7,16 @@ import { VitePWA } from 'vite-plugin-pwa';
 // リポジトリ名を変えるとアプリのURLが変わるため、この値も変えないこと。
 const BASE_PATH = '/Dev_app_training/';
 
+/** アプリの版。設定画面に、ビルドした日時（UTC）と合わせて表示する */
+const APP_VERSION = '0.1.0';
+
 export default defineConfig({
   base: BASE_PATH,
+  define: {
+    __APP_VERSION__: JSON.stringify(
+      `${APP_VERSION}（${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC）`,
+    ),
+  },
   plugins: [
     react(),
     VitePWA({
@@ -24,9 +32,9 @@ export default defineConfig({
         start_url: BASE_PATH,
         scope: BASE_PATH,
         display: 'standalone',
-        // 色はデザイン仕様書の案。確定したら合わせて変更する
-        theme_color: '#111827',
-        background_color: '#111827',
+        // 画面の背景色（デザイン仕様書 3.1 の --color-bg）に合わせる
+        theme_color: '#F5F6F8',
+        background_color: '#F5F6F8',
         icons: [],
       },
       workbox: {

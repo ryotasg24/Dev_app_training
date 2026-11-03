@@ -1,16 +1,44 @@
 /*
- * 全体の基本スタイル。色はデザイン仕様書（案）の値。確定したら合わせて変更する。
+ * 全体の基本スタイル（デザイン仕様書 3〜5章）。画面側では色を直接書かず、ここのCSS変数を使う。
  * ダークモードは端末の設定に合わせて自動で切り替える。
  */
 :root {
   color-scheme: light dark;
+
+  /* 基本の色 */
   --color-bg: #f5f6f8;
   --color-surface: #ffffff;
   --color-text: #1f2937;
   --color-text-sub: #6b7280;
   --color-border: #e5e7eb;
   --color-hover: #f0f1f4;
-  --color-primary: #2563eb;
+
+  /*
+   * メインの色：淡緑色 #CEE6C1（ユーザー指定）。
+   * 明るい色なので、塗りの上の文字は濃い緑（on-primary）にする。
+   * 白い背景の上に置く文字・線は、同じ系統の濃い緑（primary-strong）を使う。
+   */
+  --color-primary: #cee6c1;
+  --color-on-primary: #1f3a14;
+  --color-primary-strong: #3f6b2a;
+  --color-on-primary-strong: #ffffff;
+  --color-danger: #dc2626;
+
+  /* 状態の色（人体図・凡例） */
+  --color-status-fatigued: #ef4444;
+  --color-status-recovering: #f59e0b;
+  --color-status-recovered: #22c55e;
+  --color-status-done: #06b6d4;
+  --color-status-none: #d1d5db;
+
+  /* お知らせの帯 */
+  --color-notice-warn: #f59e0b;
+  --color-notice-info: #3f6b2a;
+
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 8%);
+  --radius-card: 16px;
+  --radius-control: 12px;
+
   font-family:
     -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI',
     'Meiryo', sans-serif;
@@ -27,7 +55,19 @@
     --color-text-sub: #9ca3af;
     --color-border: #374151;
     --color-hover: #2b3545;
-    --color-primary: #60a5fa;
+    --color-primary: #cee6c1;
+    --color-on-primary: #1f3a14;
+    --color-primary-strong: #cee6c1;
+    --color-on-primary-strong: #1f3a14;
+    --color-danger: #f87171;
+    --color-status-fatigued: #f87171;
+    --color-status-recovering: #fbbf24;
+    --color-status-recovered: #4ade80;
+    --color-status-done: #22d3ee;
+    --color-status-none: #4b5563;
+    --color-notice-warn: #fbbf24;
+    --color-notice-info: #cee6c1;
+    --shadow-card: none;
   }
 }
 
@@ -44,7 +84,42 @@ body {
   color: var(--color-text);
 }
 
+h1 {
+  font-size: 1.375rem;
+  line-height: 1.3;
+  margin: 0 0 16px;
+}
+
+h2 {
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  margin: 0 0 8px;
+}
+
+p {
+  margin: 0 0 8px;
+}
+
+a {
+  color: var(--color-primary-strong);
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+}
+
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-primary-strong);
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }
